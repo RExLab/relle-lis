@@ -14,7 +14,7 @@ exports.All = function (cb) {
 
     connection.query('SELECT * from instances', function (err1, instances, fields) {
         if (err1)
-            throw err
+            throw err1
 
         connection.query('SELECT * from labs', function (err, labs, fields) {
             if (err)
