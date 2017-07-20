@@ -43,5 +43,3 @@ Lab.prototype.setInstance = function (instance) {
 }
 
 module.exports = Lab
-
-
