@@ -1,4 +1,11 @@
 var Client = require('node-rest-client').Client
+var mysql = require('mysql')
+
+var config = require('./config.js')
+
+var connection = mysql.createConnection(config.dbconfig)
+
+
 
 exports.authorization = function(req, res, labs){
      console.log(req.body)
@@ -114,3 +121,36 @@ exports.LabsReport = function(time) {
     log.report(new Date() + ".json")
     log.clean()
 }
+
+exports.verifyBookingToken = function(expID,token, callback_pass, callback_failed) {
+    //Excluindo agendamentos antigos
+    var timesAtual = Math.round(new Date().getTime()/1000);
+    connection.query("DELETE FROM `booking` WHERE `timestamp_left` < " + timesAtual, function () {
+    });
+    //Comparando o token
+    connection.query("SELECT * FROM booking WHERE token =" + token + " AND (" + timesAtual + " BETWEEN timestamp_enter AND timestamp_left) AND "+expID+" = lab_id", function (err1, result) {
+            if (err1)
+               throw err1;
+            if(typeof(result) !== 'undefined' && result.length >0){
+                callback_pass();
+            }
+            else{
+                callback_failed();
+    }
+    });
+};
+
+
+exports.verifyNotice = function(expID, Npass, Nfail){
+    var timesAtual = Math.round(new Date().getTime()/1000);
+    connection.query("SELECT* FROM booking WHERE lab_id = "+expID+" AND ("+ timesAtual + " BETWEEN timestamp_enter AND timestamp_left)", function (err, result, fields){
+        if(err)
+            throw err;
+        if(typeof(result) !== 'undefined' && result.length >0){
+            Npass();
+        }
+        else{
+            Nfail();
+        }   
+    });
+};
