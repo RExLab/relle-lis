@@ -69,5 +69,3 @@ Instance.prototype.log = function (message) {
 }
 
 module.exports = Instance
-
-
