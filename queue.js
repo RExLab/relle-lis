@@ -50,26 +50,82 @@ Queue.prototype.replaceOnQueue = function (socket) {
 
 };
 
+Queue.prototype.orderQueue = function(socket) {   
+    if (this.queue_d.length > 0){
+        for(var i = 0; i < this.queue_d.length;i++) {
+            if (this.queue_d[i].priority == false){
+                    this.queue_d.splice(i,0,socket);
+                    break;
+            }else if(i == this.queue_d.length-1){
+                this.queue_d.push(socket);
+                break;
+            }
+        }
+    }
+    else {
+        this.queue_d.push(socket);
+    }
+}
 
 Queue.prototype.push = function (socket) {
-
+    socket.priority = false;
+    
     this.queue_d.push(socket);
-    var instance;
+    this.handleArray(socket);
+    
+
+};
+
+Queue.prototype.unshift = function (socket) {
+    socket.priority = true;
+    this.orderQueue(socket);
+    this.handleArray(socket);
+
+};
+
+
+Queue.prototype.handleArray = function (socket) {
+   
+    var instance,position = 0;
     if ((instance = Helpers.InstanceAvailable(this.lab)) != null) {
         this.schedule(instance);
     } else {
         var n_instances = this.lab.instances.filter(function (obj) {
             return obj.maintenance == 0
         }).length;
-
-        this.wait(socket,
-                this.queue_d.length * this.timeslice - ((new Date() / 1000) - Helpers.TimeWaiting(this.lab)),
-                this.queue_d.length,
+        
+        for(var i = 0; i < this.queue_d.length; i++){
+            if(this.queue_d[i].id == socket.id){
+                position = i+1;
+            }                
+        }
+        
+        this.wait(socket,                                
+                position * this.timeslice - ((new Date() / 1000) - Helpers.TimeWaiting(this.lab)),
+                position,
                 n_instances)
     }
-
+    
+    if (typeof (this.status) == 'function') {
+        for (var i = 0; i < this.queue_d.length; i++) {
+            if (this.queue_d[i] != null){
+                this.status(this.queue_d[i],
+                        (i + 1) * this.timeslice - ((new Date() / 1000) - Helpers.TimeWaiting(this.lab)),
+                        (i + 1))
+            }
+        }
+    }
+    
+    
+    
     console.log("push - queue length: " + this.queue_d.length);
-
+    
+    
+    /*
+    for (var i = 0; i < this.queue_d.length; i++) {
+        console.log(this.queue_d[i].id)
+    }
+    */
 };
 
 Queue.prototype.remove = function (socket) {
@@ -93,10 +149,10 @@ Queue.prototype.remove = function (socket) {
     }
     if (typeof (this.status) == 'function') {
         for (var i = 0; i < this.queue_d.length; i++) {
-            if (this.queue_d[i] != null) {
+            if (this.queue_d[i] != null){
                 this.status(this.queue_d[i],
                         (i + 1) * this.timeslice - ((new Date() / 1000) - Helpers.TimeWaiting(this.lab)),
-                        this.queue_d.length)
+                        (i + 1))
             }
         }
     }
@@ -160,9 +216,5 @@ Queue.prototype.bindFunction = function (funcs) {
     this.leave = funcs.leave
     this.extended = funcs.extended
     this.status = funcs.status
-
 };
-
 module.exports = Queue;
-
-
