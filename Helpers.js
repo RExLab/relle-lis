@@ -122,21 +122,18 @@ exports.LabsReport = function(time) {
     log.clean()
 }
 
-exports.verifyBookingToken = function(expID,token, callback_pass, callback_failed) {
+exports.verifyBookingToken = function(expID, token, callback_pass, callback_failed) {
     //Excluindo agendamentos antigos
     var timesAtual = Math.round(new Date().getTime()/1000);
     connection.query("DELETE FROM `booking` WHERE `timestamp_left` < " + timesAtual, function () {
     });
     //Comparando o token
-    connection.query("SELECT * FROM booking WHERE token =" + token + " AND (" + timesAtual + " BETWEEN timestamp_enter AND timestamp_left) AND "+expID+" = lab_id", function (err1, result) {
-            if (err1)
-               throw err1;
-            if(typeof(result) !== 'undefined' && result.length >0){
-                callback_pass();
-            }
-            else{
+    connection.query("SELECT * FROM booking WHERE token =" + token + " AND (" + timesAtual + " BETWEEN timestamp_enter AND timestamp_left) AND "+expID+" = lab_id", function (result) {
+        if(typeof(result) !== 'undefined' && result.length >0){
+            callback_pass();
+        }else{
                 callback_failed();
-    }
+        }
     });
 };
 
