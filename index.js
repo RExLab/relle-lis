@@ -95,35 +95,23 @@ function createLabRoom(lab) {
         console.log('new user on lab ' + lab.id + ' id: ' + socket.id)
         
         socket.on('new connection', function (data) {
-            console.log(data)  
-            
-            /*----------------- Token verificação---------------- */
-            if (typeof (data.token) != 'undefined' && data.token>0 ) {
-                Helpers.verifyBookingToken(lab.id,data.token, function () {
-                    if (!lab.queue.isOnQueue(data.pass)) {
-                        socket.pass = data.pass
-                        socket.activeUser = true
-                        lab.queue.unshift(socket)
-                        }                        
-                    }, function () {
+            if (typeof (data.token) != 'undefined' && data.token != ""){
+                Helpers.verifyBookingToken(lab.id,data.token, function(){
+                if (!lab.queue.isOnQueue(data.pass)) {
+                    socket.pass = data.pass
+                    socket.activeUser = true
+                    lab.queue.unshift(socket)}                        
+                }, function(){
                         socket.emit('err', {
                             code: 1,
                             message: 'Missing booking token'
-                        })
-                        
-                    });
-
-            }else if ((data.token).length > 0 && !(data.token>0)) {
-                        socket.emit('err', {
-                            code: 1,
-                            message: 'Missing booking token'
-                        })
-                
+                        })}
+                );                
             }else if (typeof (data.pass) == 'undefined') {
                 socket.emit('err', {
-                    code: 2,
-                    message: 'Missing session token'
-                })
+                code: 2,
+                message: 'Missing session token'
+            })
 
             } else if (!lab.queue.isOnQueue(data.pass)) {
                 //autenticação
@@ -136,9 +124,7 @@ function createLabRoom(lab) {
                     code: 3,
                     message: 'Socket is already on queue'
                 })
-
             }
-
         })
 
         socket.on('reconnection', function (data) {
