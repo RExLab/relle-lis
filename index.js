@@ -18,7 +18,7 @@ io.set('heartbeat interval', 10000)
 io.set('heartbeat timeout', 30000)
 
 http.listen(config.port, function () {
-    console.log('listening on *:' + config.port)
+    console.log('listening on *:'+config.port)
 })
 
 dataset.All(init)
@@ -74,6 +74,7 @@ function init(labs) {
  })
  
  socket.emit('status', null) */
+
 function createLabRoom(lab) {
     lab.queue = new Queue(lab.duration * 60, lab)
     var nsp = io.of(lab.id)
@@ -90,28 +91,16 @@ function createLabRoom(lab) {
     })
 
     nsp.on('connection', function (socket) {
-        labAux = lab.id;  
         socket.activeUser = false
         console.log('new user on lab ' + lab.id + ' id: ' + socket.id)
-        
+
         socket.on('new connection', function (data) {
-            if (typeof (data.token) != 'undefined' && data.token != ""){
-                Helpers.verifyBookingToken(lab.id,data.token, function(){
-                if (!lab.queue.isOnQueue(data.pass)) {
-                    socket.pass = data.pass
-                    socket.activeUser = true
-                    lab.queue.unshift(socket)}                        
-                }, function(){
-                        socket.emit('err', {
-                            code: 1,
-                            message: 'Missing booking token'
-                        })}
-                );                
-            }else if (typeof (data.pass) == 'undefined') {
+            console.log(data)
+            if (typeof (data.pass) == 'undefined') {
                 socket.emit('err', {
-                code: 2,
-                message: 'Missing session token'
-            })
+                    code: 1,
+                    message: 'Missing token'
+                })
 
             } else if (!lab.queue.isOnQueue(data.pass)) {
                 //autenticação
@@ -124,7 +113,9 @@ function createLabRoom(lab) {
                     code: 3,
                     message: 'Socket is already on queue'
                 })
+
             }
+
         })
 
         socket.on('reconnection', function (data) {
@@ -171,20 +162,14 @@ function createLabRoom(lab) {
     })
 }
 
-function wait(socket, time, queue_len, instance_len) {        
+
+function wait(socket, time, queue_len, instance_len) {
     var obj = {}
     obj.clock = Helpers.formatTime(time)
     obj.wait = queue_len
     obj.ninstances = instance_len
-    Helpers.verifyNotice(labAux,function(){
-            obj.infor = true;
-            socket.emit('wait', obj)
-                console.log(obj)
-        }, function(){
-            obj.infor = false;
-            socket.emit('wait', obj)
-                console.log(obj)
-        })
+    console.log(obj)
+    socket.emit('wait', obj)
 }
 
 function status(socket, time, queue_len) {
@@ -202,18 +187,18 @@ function extended(socket, lab_instance) {
 }
 
 function first(socket, lab_instance) {
-    var path = config.sitePath + "/" + lab_instance.lab_id + "/" + lab_instance.id + "/"
+    var path = config.sitePath+"/"+lab_instance.lab_id+"/"+lab_instance.id+"/"	
     var obj = {
         js: path + config.scriptFile,
-        css: path + config.styleFile,
-        defaulthtml: path + config.default_html,
+        css: path+ config.styleFile,
+        defaulthtml:  path+ config.default_html,
         en: path + config.en_html,
         pt: path + config.pt_html,
         es: path + config.es_html,
         address: lab_instance.address.trim(),
         instance_id: lab_instance.id
     }
-
+    
     if (typeof (lab_instance.defaulthtml) !== "undefined") {
         if (lab_instance.defaulthtml.length > 0) {
             obj.js = lab_instance.js.trim()
@@ -221,7 +206,7 @@ function first(socket, lab_instance) {
             obj.defaulthtml = lab_instance.defaulthtml.trim()
             obj.en = lab_instance.en.trim()
             obj.pt = lab_instance.pt.trim()
-            obj.es = lab_instance.es.trim()
+            obj.es = lab_instance.es.trim()            
         }
     }
 
