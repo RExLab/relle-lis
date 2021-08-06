@@ -54,6 +54,7 @@ General application parameters:
   pt_html: "pt.html", // the default name of HTML file for a specific language and so on...
   en_html: "en.html",
   default_html: "index.html" 
+``` 
 
 ## License
 [![CC BY-NC-ND 4.0][cc-by-nc-nd-shield]][cc-by-nc-nd]
